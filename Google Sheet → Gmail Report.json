@@ -1,0 +1,137 @@
+{
+  "name": "Google Sheet → Gmail Report",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -336,
+        16
+      ],
+      "id": "5a8c4dce-b269-4191-90ca-040001319c4b",
+      "name": "Manual Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1lP8faTd148V67UqD3PgouCc7EgxbOUXPG0my_5nETjA",
+          "mode": "list",
+          "cachedResultName": "student_enrollment_raw",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1lP8faTd148V67UqD3PgouCc7EgxbOUXPG0my_5nETjA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1829638061,
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1lP8faTd148V67UqD3PgouCc7EgxbOUXPG0my_5nETjA/edit#gid=1829638061"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -112,
+        16
+      ],
+      "id": "4ee91147-bb16-4e34-befa-bfc6cc204cd4",
+      "name": "Get Rows",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "l05PAucP42dEvhDI",
+          "name": "AI_CEO"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Collect every row from Google Sheets\nconst rows = $input.all().map(item => item.json);\n\nconst date = new Date().toLocaleDateString('en-IN', {\n  day: '2-digit', month: 'short', year: 'numeric'\n});\nconst subject = `Latest Sheet Data – ${date}`;\n\n// No rows? Still send a clear email\nif (rows.length === 0) {\n  return [{ json: { subject, body: 'Hi,\\n\\nThe sheet has no data right now.\\n\\nRegards,\\nYour Automation Bot' } }];\n}\n\n// Use the sheet's column headers (skip n8n's internal row_number)\nconst headers = Object.keys(rows[0]).filter(h => h !== 'row_number');\n\n// One readable line per row: \"1. Name: Asha | City: Kochi\"\nconst lines = rows.map((row, i) =>\n  `${i + 1}. ` + headers.map(h => `${h}: ${row[h] ?? ''}`).join(' | ')\n);\n\nconst body =\n  `Hi,\\n\\n` +\n  `Here is the latest data from the sheet (${rows.length} rows):\\n\\n` +\n  `${lines.join('\\n')}\\n\\n` +\n  `Regards,\\nYour Automation Bot`;\n\nreturn [{ json: { subject, body } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        112,
+        16
+      ],
+      "id": "eb339231-568f-4dc3-8556-6d0125a390b7",
+      "name": "Build Email"
+    },
+    {
+      "parameters": {
+        "sendTo": "test32222@yopmail.com",
+        "subject": "={{ $json.subject }}",
+        "emailType": "text",
+        "message": "={{ $json.body }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        336,
+        16
+      ],
+      "id": "e27fcabd-6c5c-4526-a6cb-a8cc0484abbe",
+      "name": "Send Email",
+      "webhookId": "11111111-aaaa-4bbb-8ccc-000000000005",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "IGCawwnd2wYM0ueO",
+          "name": "AI_CEO"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Rows": {
+      "main": [
+        [
+          {
+            "node": "Build Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Email": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "4ee3010a-3c68-4c85-ab1b-89b08d0c6fc0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "933408bea3ea763a57ece224e12d70edbd30736097ad786ad63bea298fb9f73c"
+  },
+  "nodeGroups": [],
+  "id": "3QVlDfWph8Tlz0b7",
+  "tags": []
+}
